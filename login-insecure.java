@@ -10,10 +10,10 @@ public class InsecureLoginServlet extends HttpServlet {
         String password = request.getParameter("password");
 
         // Step 1: Insecure SQL Query - No input validation or parameterized queries
-        String query = "SELECT * FROM users WHERE username = '" + username + "' AND password = '" + password + "'"; // Vulnerable to SQL Injection
+        String query = "SELECT * FROM users WHERE username = ? AND password = ?"; // Use prepared statement to prevent SQL Injection
 
         Connection conn = null;
-        Statement stmt = null;
+        PreparedStatement stmt = null;
         ResultSet rs = null;
 
         try {
@@ -21,8 +21,10 @@ public class InsecureLoginServlet extends HttpServlet {
             conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/ecommerce", "root", "password");
 
             // Execute the query
-            stmt = conn.createStatement();
-            rs = stmt.executeQuery(query);
+            stmt = conn.prepareStatement(query);
+            stmt.setString(1, username);
+            stmt.setString(2, password);
+            rs = stmt.executeQuery();
 
             // Step 2: If a matching user is found, grant access
             if (rs.next()) {
